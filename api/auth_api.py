@@ -3,6 +3,7 @@ from constants import LOGIN_ENDPOINT
 from custom_requester.custom_requester import CustomRequester
 from constants import BASE_URL_FOR_AUTH_API
 
+
 class AuthAPI(CustomRequester):
     """
     Класс для работы с аутентификацией.
@@ -37,15 +38,13 @@ class AuthAPI(CustomRequester):
             expected_status=expected_status
         )
 
-    def authenticate(self, user_creds):
-        login_data = {
-            "email": user_creds[0],
-            "password": user_creds[1]
-        }
-
+    def authenticate(self, login_data):
+        """
+        Авторизация пользователя и обновление хэдеров добавлением токена.
+        :param login_data: Данные для логина.
+        """
         response = self.login_user(login_data).json()
         if "accessToken" not in response:
             raise KeyError("token is missing")
 
-        token = response["accessToken"]
-        self._update_session_headers(**{"authorization": "Bearer " + token})
+        self.update_session_headers(**{"authorization": f"Bearer {response['accessToken']}"})

@@ -10,4 +10,7 @@ LOGIN_ENDPOINT = "/login"
 REGISTER_ENDPOINT = "/register"
 MOVIES_ENDPOINT = "/movies"
 
-CREDS_FOR_SUPER_ADMIN = ("api1@gmail.com", "asdqwe123Q")
+CREDS_FOR_SUPER_ADMIN = {
+    "email": "api1@gmail.com",
+    "password": "asdqwe123Q"
+}

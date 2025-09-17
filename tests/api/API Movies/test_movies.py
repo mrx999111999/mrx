@@ -172,10 +172,7 @@ class TestMoviesApi:
             "published": test_movie["published"],
             "genreId": test_movie["genreId"],
         }
-        response = api_manager.movies_api.create_movie(movie_data_without_name, 400)
-
-        # Проверки
-        assert response.text is not None, "Пустое тело ответа"
+        api_manager.movies_api.create_movie(movie_data_without_name, 400)
 
     def test_create_movie_with_duplicate_name(self, api_manager: ApiManager, test_movie):
         """
@@ -190,10 +187,7 @@ class TestMoviesApi:
             "published": test_movie["published"],
             "genreId": test_movie["genreId"],
         }
-        response = api_manager.movies_api.create_movie(movie_data_with_duplicate_name, 409)
-
-        # Проверки
-        assert response.text is not None, "Пустое тело ответа"
+        api_manager.movies_api.create_movie(movie_data_with_duplicate_name, 409)
 
     def test_create_movie_without_price(self, api_manager: ApiManager, test_movie):
         """
@@ -207,10 +201,7 @@ class TestMoviesApi:
             "published": test_movie["published"],
             "genreId": test_movie["genreId"],
         }
-        response = api_manager.movies_api.create_movie(movie_data_without_price, 400)
-
-        # Проверки
-        assert response.text is not None, "Пустое тело ответа"
+        api_manager.movies_api.create_movie(movie_data_without_price, 400)
 
     def test_create_movie_without_description(self, api_manager: ApiManager, test_movie):
         """
@@ -224,10 +215,7 @@ class TestMoviesApi:
             "published": test_movie["published"],
             "genreId": test_movie["genreId"],
         }
-        response = api_manager.movies_api.create_movie(movie_data_without_description, 400)
-
-        # Проверки
-        assert response.text is not None, "Пустое тело ответа"
+        api_manager.movies_api.create_movie(movie_data_without_description, 400)
 
     def test_create_movie_without_location(self, api_manager: ApiManager, test_movie):
         """
@@ -241,10 +229,7 @@ class TestMoviesApi:
             "published": test_movie["published"],
             "genreId": test_movie["genreId"],
         }
-        response = api_manager.movies_api.create_movie(movie_data_without_location, 400)
-
-        # Проверки
-        assert response.text is not None, "Пустое тело ответа"
+        api_manager.movies_api.create_movie(movie_data_without_location, 400)
 
     def test_create_movie_without_published(self, api_manager: ApiManager, test_movie):
         """
@@ -258,10 +243,7 @@ class TestMoviesApi:
             "location": test_movie["location"],
             "genreId": test_movie["genreId"],
         }
-        response = api_manager.movies_api.create_movie(movie_data_without_published, 400)
-
-        # Проверки
-        assert response.text is not None, "Пустое тело ответа"
+        api_manager.movies_api.create_movie(movie_data_without_published, 400)
 
     def test_create_movie_without_genre_id(self, api_manager: ApiManager, test_movie):
         """
@@ -275,47 +257,32 @@ class TestMoviesApi:
             "location": test_movie["location"],
             "published": test_movie["published"]
         }
-        response = api_manager.movies_api.create_movie(movie_data_without_genre_id, 400)
-
-        # Проверки
-        assert response.text is not None, "Пустое тело ответа"
+        api_manager.movies_api.create_movie(movie_data_without_genre_id, 400)
 
     def test_get_movies_with_page_size_zero(self, api_manager: ApiManager):
         """
         Тест на получение афиш фильмов с "pageSize" равным 0.
         """
         filter_by_page_size = {"pageSize": 0}
-        response = api_manager.movies_api.get_movies(filter_by_page_size, 400)
-
-        # Проверки
-        assert response.text is not None, "Пустое тело ответа"
+        api_manager.movies_api.get_movies(filter_by_page_size, 400)
 
     def test_get_movies_with_negative_page_size(self, api_manager: ApiManager):
         """
         Тест на получение афиш фильмов с отрицательным "pageSize".
         """
         filter_by_page_size = {"pageSize": -1}
-        response = api_manager.movies_api.get_movies(filter_by_page_size, 400)
-
-        # Проверки
-        assert response.text is not None, "Пустое тело ответа"
+        api_manager.movies_api.get_movies(filter_by_page_size, 400)
 
     def test_get_movies_with_page_zero(self, api_manager: ApiManager):
         """
         Тест на получение афиш фильмов с "page" равным 0.
         """
         filter_by_page = {"page": 0}
-        response = api_manager.movies_api.get_movies(filter_by_page, 400)
-
-        # Проверки
-        assert response.text is not None, "Пустое тело ответа"
+        api_manager.movies_api.get_movies(filter_by_page, 400)
 
     def test_get_movies_with_negative_page(self, api_manager: ApiManager):
         """
         Тест на получение афиш фильмов с отрицательным "page".
         """
         filter_by_page = {"page": -1}
-        response = api_manager.movies_api.get_movies(filter_by_page, 400)
-
-        # Проверки
-        assert response.text is not None, "Пустое тело ответа"
+        api_manager.movies_api.get_movies(filter_by_page, 400)

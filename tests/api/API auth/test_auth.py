@@ -38,10 +38,7 @@ class TestAuthAPI:
             "email": "0000000@gmail.com",
             "password": test_user["password"]
         }
-        response = api_manager.auth_api.login_user(login_data_with_invalid_email, 401)
-
-        # Проверки
-        assert response.text is not None, "Пустое тело ответа"
+        api_manager.auth_api.login_user(login_data_with_invalid_email, 401)
 
     def test_login_with_invalid_password(self, api_manager: ApiManager, test_user):
         """
@@ -51,16 +48,10 @@ class TestAuthAPI:
             "email": test_user["email"],
             "password": "1000"
         }
-        response = api_manager.auth_api.login_user(login_data_with_invalid_password, 401)
-
-        # Проверки
-        assert response.text is not None, "Пустое тело ответа"
+        api_manager.auth_api.login_user(login_data_with_invalid_password, 401)
 
     def test_login_with_empty_body(self, api_manager: ApiManager, test_user):
         """
         Тест на авторизацию пользователя c пустым телом.
         """
-        response = api_manager.auth_api.login_user({}, 401)
-
-        # Проверки
-        assert response.text is not None, "Пустое тело ответа"
+        api_manager.auth_api.login_user({}, 401)

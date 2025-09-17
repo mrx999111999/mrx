@@ -43,10 +43,9 @@ class CustomRequester:
             raise ValueError(f"Unexpected status code: {response.status_code}. Expected: {expected_status}")
         return response
 
-    def _update_session_headers(self, **kwargs):
+    def update_session_headers(self, **kwargs):
         """
         Обновление заголовков сессии.
-        :param session: Объект requests.Session, предоставленный API-классом.
         :param kwargs: Дополнительные заголовки.
         """
         self.headers.update(kwargs)  # Обновляем базовые заголовки
