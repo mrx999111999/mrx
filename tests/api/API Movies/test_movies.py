@@ -1,11 +1,14 @@
 import random
+import pytest
 from api.api_manager import ApiManager
-from constants import CREDS_FOR_SUPER_ADMIN
+from entities.user import User
 from utils.data_generator import DataGeneratorForMoviesAPI
 
 
 class TestMoviesApi:
-    def test_get_movies(self, api_manager: ApiManager):
+    @pytest.mark.api
+    @pytest.mark.smoke
+    def test_get_movies(self, api_manager: ApiManager) -> None:
         """
         Тест на получение афиш фильмов с фильтрами по умолчанию.
         """
@@ -20,7 +23,9 @@ class TestMoviesApi:
         assert "pageSize" in response_data, "pageSize отсутствует в ответе"
         assert "pageCount" in response_data, "pageCount отсутствует в ответе"
 
-    def test_get_movies_filtered_by_page_size(self, api_manager: ApiManager):
+    @pytest.mark.api
+    @pytest.mark.smoke
+    def test_get_movies_filtered_by_page_size(self, api_manager: ApiManager) -> None:
         """
         Тест на получение афиш фильмов с явным указанием фильтра "pageSize".
         """
@@ -39,7 +44,9 @@ class TestMoviesApi:
             "pageSize"], "Количество отображенных фильмов на странице не равно переданному в pageSize"
         assert "pageCount" in response_data, "pageCount отсутствует в ответе"
 
-    def test_get_movies_filtered_by_page(self, api_manager: ApiManager):
+    @pytest.mark.api
+    @pytest.mark.smoke
+    def test_get_movies_filtered_by_page(self, api_manager: ApiManager) -> None:
         """
         Тест на получение афиш фильмов с явным указанием фильтра "page".
         """
@@ -56,7 +63,9 @@ class TestMoviesApi:
         assert "pageSize" in response_data, "pageSize отсутствует в ответе"
         assert "pageCount" in response_data, "pageCount отсутствует в ответе"
 
-    def test_get_movies_filtered_by_min_price(self, api_manager: ApiManager):
+    @pytest.mark.api
+    @pytest.mark.smoke
+    def test_get_movies_filtered_by_min_price(self, api_manager: ApiManager) -> None:
         """
         Тест на получение афиш фильмов с явным указанием фильтра "minPrice".
         """
@@ -74,7 +83,9 @@ class TestMoviesApi:
         assert "pageSize" in response_data, "pageSize отсутствует в ответе"
         assert "pageCount" in response_data, "pageCount отсутствует в ответе"
 
-    def test_get_movies_filtered_by_max_price(self, api_manager: ApiManager):
+    @pytest.mark.api
+    @pytest.mark.smoke
+    def test_get_movies_filtered_by_max_price(self, api_manager: ApiManager) -> None:
         """
         Тест на получение афиш фильмов с явным указанием фильтра "maxPrice".
         """
@@ -92,7 +103,9 @@ class TestMoviesApi:
         assert "pageSize" in response_data, "pageSize отсутствует в ответе"
         assert "pageCount" in response_data, "pageCount отсутствует в ответе"
 
-    def test_get_movies_filtered_by_locations(self, api_manager: ApiManager):
+    @pytest.mark.api
+    @pytest.mark.smoke
+    def test_get_movies_filtered_by_locations(self, api_manager: ApiManager) -> None:
         """
         Тест на получение афиш фильмов с явным указанием фильтра "locations".
         """
@@ -111,7 +124,9 @@ class TestMoviesApi:
         assert "pageSize" in response_data, "pageSize отсутствует в ответе"
         assert "pageCount" in response_data, "pageCount отсутствует в ответе"
 
-    def test_get_movies_filtered_by_genre_id(self, api_manager: ApiManager):
+    @pytest.mark.api
+    @pytest.mark.smoke
+    def test_get_movies_filtered_by_genre_id(self, api_manager: ApiManager) -> None:
         """
         Тест на получение афиш фильмов с явным указанием фильтра "genreId".
         """
@@ -130,37 +145,97 @@ class TestMoviesApi:
         assert "pageSize" in response_data, "pageSize отсутствует в ответе"
         assert "pageCount" in response_data, "pageCount отсутствует в ответе"
 
-    def test_create_movie(self, api_manager: ApiManager, test_movie):
+    @pytest.mark.api
+    @pytest.mark.regression
+    @pytest.mark.parametrize("min_price,max_price,locations,genre_id", [(100, 2000, "MSK", 2), (1000, 3000, "SPB", 10)])
+    def test_get_movies_with_multiple_filters(self, min_price: int | float, max_price: int | float, locations: str,
+                                              genre_id: int,
+                                              api_manager: ApiManager) -> None:
         """
-        Тест на создание фильма.
+        Параметризованный тест на получение афиш фильмов с комбинацией фильтров".
         """
-        # Авторизуемся под ролью SUPER_ADMIN и обновляем хэдеры
-        api_manager.auth_api.authenticate(CREDS_FOR_SUPER_ADMIN)
-
-        response = api_manager.movies_api.create_movie(test_movie)
-        response_data = response.json()
+        combined_filtered = {
+            "minPrice": min_price,
+            "maxPrice": max_price,
+            "locations": locations,
+            "genreId": genre_id,
+        }
+        response = api_manager.movies_api.get_movies(combined_filtered).json()
 
         # Проверки
-        assert "id" in response_data, "id отсутствует в ответе"
-        assert "name" in response_data, "name отсутствует в ответе"
-        assert test_movie["name"] == response_data["name"], "name не совпадает"
-        assert "price" in response_data, "price отсутствует в ответе"
-        assert test_movie["price"] == response_data["price"], "price не совпадает"
-        assert "description" in response_data, "description отсутствует в ответе"
-        assert test_movie["description"] == response_data["description"], "description не совпадает"
-        assert "imageUrl" in response_data, "imageUrl отсутствует в ответе"
-        assert test_movie["imageUrl"] == response_data["imageUrl"], "imageUrl не совпадает"
-        assert "location" in response_data, "location отсутствует в ответе"
-        assert test_movie["location"] == response_data["location"], "location не совпадает"
-        assert "published" in response_data, "published отсутствует в ответе"
-        assert test_movie["published"] == response_data["published"], "published не совпадает"
-        assert "genreId" in response_data, "genreId отсутствует в ответе"
-        assert test_movie["genreId"] == response_data["genreId"], "genreId не совпадает"
-        assert "genre" in response_data, "genre отсутствует в ответе"
-        assert "createdAt" in response_data, "createdAt отсутствует в ответе"
-        assert "rating" in response_data, "rating отсутствует в ответе"
+        for movie in response["movies"]:
+            assert min_price <= movie["price"] <= max_price, "price д.б >= minPrice и <= maxPrice"
+            assert movie["location"] == locations, "locations не совпадает"
+            assert movie["genreId"] == genre_id, "genreId не совпадает"
 
-    def test_create_movie_without_name(self, api_manager: ApiManager, test_movie):
+        assert "movies" in response, "movies отсутствует в ответе"
+        assert response["movies"] != [], "Список фильмов пустой"
+        assert "count" in response, "count отсутствует в ответе"
+        assert "page" in response, "page отсутствует в ответе"
+        assert "pageSize" in response, "pageSize отсутствует в ответе"
+        assert "pageCount" in response, "pageCount отсутствует в ответе"
+
+    @pytest.mark.api
+    @pytest.mark.smoke
+    def test_create_movie(self, super_admin: User, test_movie: dict[str, str | int | float | bool]) -> None:
+        """
+        Тест на создание фильма с ролью "SUPER_ADMIN".
+        """
+        response = super_admin.api.movies_api.create_movie(test_movie).json()
+
+        # Проверки
+        assert "id" in response, "id отсутствует в ответе"
+        assert "name" in response, "name отсутствует в ответе"
+        assert test_movie["name"] == response["name"], "name не совпадает"
+        assert "price" in response, "price отсутствует в ответе"
+        assert test_movie["price"] == response["price"], "price не совпадает"
+        assert "description" in response, "description отсутствует в ответе"
+        assert test_movie["description"] == response["description"], "description не совпадает"
+        assert "imageUrl" in response, "imageUrl отсутствует в ответе"
+        assert test_movie["imageUrl"] == response["imageUrl"], "imageUrl не совпадает"
+        assert "location" in response, "location отсутствует в ответе"
+        assert test_movie["location"] == response["location"], "location не совпадает"
+        assert "published" in response, "published отсутствует в ответе"
+        assert test_movie["published"] == response["published"], "published не совпадает"
+        assert "genreId" in response, "genreId отсутствует в ответе"
+        assert test_movie["genreId"] == response["genreId"], "genreId не совпадает"
+        assert "genre" in response, "genre отсутствует в ответе"
+        assert "createdAt" in response, "createdAt отсутствует в ответе"
+        assert "rating" in response, "rating отсутствует в ответе"
+
+    @pytest.mark.api
+    @pytest.mark.smoke
+    @pytest.mark.slow
+    @pytest.mark.parametrize("count", [1, 2, 3], ids=[
+        "delete_first_movie",
+        "delete_second_movie",
+        "delete_third_movie"
+    ])
+    def test_delete_movie(self, super_admin: User, created_movie: dict[
+        str, str | int | float | bool], count: int) -> None:
+        """
+        Параметризованный тест на удаление фильма.
+        """
+        response = super_admin.api.movies_api.delete_movie(created_movie["id"]).json()
+
+        # Проверки
+        assert "id" in response, "id отсутствует в ответе"
+        assert "name" in response, "name отсутствует в ответе"
+        assert "price" in response, "price отсутствует в ответе"
+        assert "description" in response, "description отсутствует в ответе"
+        assert "imageUrl" in response, "imageUrl отсутствует в ответе"
+        assert "location" in response, "location отсутствует в ответе"
+        assert "published" in response, "published отсутствует в ответе"
+        assert "genreId" in response, "genreId отсутствует в ответе"
+        assert "genre" in response, "genre отсутствует в ответе"
+        assert "createdAt" in response, "createdAt отсутствует в ответе"
+        assert "rating" in response, "rating отсутствует в ответе"
+        assert "reviews" in response, "reviews отсутствует в ответе"
+
+    @pytest.mark.api
+    @pytest.mark.regression
+    def test_create_movie_without_name(self, super_admin: User,
+                                       test_movie: dict[str, str | int | float | bool]) -> None:
         """
         Тест на создание фильма без "name" в запросе.
         """
@@ -172,24 +247,30 @@ class TestMoviesApi:
             "published": test_movie["published"],
             "genreId": test_movie["genreId"],
         }
-        api_manager.movies_api.create_movie(movie_data_without_name, 400)
+        super_admin.api.movies_api.create_movie(movie_data_without_name, 400)
 
-    def test_create_movie_with_duplicate_name(self, api_manager: ApiManager, test_movie):
+    @pytest.mark.api
+    @pytest.mark.regression
+    def test_create_movie_with_duplicate_name(self, super_admin: User, created_movie: dict[
+        str, str | int | float | bool]) -> None:
         """
         Тест на создание фильма с уже существующим названием.
         """
         movie_data_with_duplicate_name = {
-            "name": test_movie["name"],
-            "imageUrl": test_movie["imageUrl"],
-            "price": test_movie["price"],
-            "description": test_movie["description"],
-            "location": test_movie["location"],
-            "published": test_movie["published"],
-            "genreId": test_movie["genreId"],
+            "name": created_movie["name"],
+            "imageUrl": created_movie["imageUrl"],
+            "price": created_movie["price"],
+            "description": created_movie["description"],
+            "location": created_movie["location"],
+            "published": created_movie["published"],
+            "genreId": created_movie["genreId"],
         }
-        api_manager.movies_api.create_movie(movie_data_with_duplicate_name, 409)
+        super_admin.api.movies_api.create_movie(movie_data_with_duplicate_name, 409)
 
-    def test_create_movie_without_price(self, api_manager: ApiManager, test_movie):
+    @pytest.mark.api
+    @pytest.mark.regression
+    def test_create_movie_without_price(self, super_admin: User,
+                                        test_movie: dict[str, str | int | float | bool]) -> None:
         """
         Тест на создание фильма без "price" в запросе.
         """
@@ -201,9 +282,12 @@ class TestMoviesApi:
             "published": test_movie["published"],
             "genreId": test_movie["genreId"],
         }
-        api_manager.movies_api.create_movie(movie_data_without_price, 400)
+        super_admin.api.movies_api.create_movie(movie_data_without_price, 400)
 
-    def test_create_movie_without_description(self, api_manager: ApiManager, test_movie):
+    @pytest.mark.api
+    @pytest.mark.regression
+    def test_create_movie_without_description(self, super_admin: User,
+                                              test_movie: dict[str, str | int | float | bool]) -> None:
         """
         Тест на создание фильма без "description" в запросе.
         """
@@ -215,9 +299,12 @@ class TestMoviesApi:
             "published": test_movie["published"],
             "genreId": test_movie["genreId"],
         }
-        api_manager.movies_api.create_movie(movie_data_without_description, 400)
+        super_admin.api.movies_api.create_movie(movie_data_without_description, 400)
 
-    def test_create_movie_without_location(self, api_manager: ApiManager, test_movie):
+    @pytest.mark.api
+    @pytest.mark.regression
+    def test_create_movie_without_location(self, super_admin: User,
+                                           test_movie: dict[str, str | int | float | bool]) -> None:
         """
         Тест на создание фильма без "location" в запросе.
         """
@@ -229,9 +316,12 @@ class TestMoviesApi:
             "published": test_movie["published"],
             "genreId": test_movie["genreId"],
         }
-        api_manager.movies_api.create_movie(movie_data_without_location, 400)
+        super_admin.api.movies_api.create_movie(movie_data_without_location, 400)
 
-    def test_create_movie_without_published(self, api_manager: ApiManager, test_movie):
+    @pytest.mark.api
+    @pytest.mark.regression
+    def test_create_movie_without_published(self, super_admin: User,
+                                            test_movie: dict[str, str | int | float | bool]) -> None:
         """
         Тест на создание фильма без "published" в запросе.
         """
@@ -243,9 +333,12 @@ class TestMoviesApi:
             "location": test_movie["location"],
             "genreId": test_movie["genreId"],
         }
-        api_manager.movies_api.create_movie(movie_data_without_published, 400)
+        super_admin.api.movies_api.create_movie(movie_data_without_published, 400)
 
-    def test_create_movie_without_genre_id(self, api_manager: ApiManager, test_movie):
+    @pytest.mark.api
+    @pytest.mark.regression
+    def test_create_movie_without_genre_id(self, super_admin: User,
+                                           test_movie: dict[str, str | int | float | bool]) -> None:
         """
         Тест на создание фильма без "genreId" в запросе.
         """
@@ -257,30 +350,47 @@ class TestMoviesApi:
             "location": test_movie["location"],
             "published": test_movie["published"]
         }
-        api_manager.movies_api.create_movie(movie_data_without_genre_id, 400)
+        super_admin.api.movies_api.create_movie(movie_data_without_genre_id, 400)
 
-    def test_get_movies_with_page_size_zero(self, api_manager: ApiManager):
+    @pytest.mark.api
+    @pytest.mark.regression
+    @pytest.mark.slow
+    def test_create_movie_with_common_user(self, common: User, test_movie: dict[str, str | int | float | bool]) -> None:
+        """
+        Тест на создание фильма с ролью "USER".
+        """
+        common.api.movies_api.create_movie(test_movie, 403)
+
+    @pytest.mark.api
+    @pytest.mark.regression
+    def test_get_movies_with_page_size_zero(self, api_manager: ApiManager) -> None:
         """
         Тест на получение афиш фильмов с "pageSize" равным 0.
         """
         filter_by_page_size = {"pageSize": 0}
         api_manager.movies_api.get_movies(filter_by_page_size, 400)
 
-    def test_get_movies_with_negative_page_size(self, api_manager: ApiManager):
+    @pytest.mark.api
+    @pytest.mark.regression
+    def test_get_movies_with_negative_page_size(self, api_manager: ApiManager) -> None:
         """
         Тест на получение афиш фильмов с отрицательным "pageSize".
         """
         filter_by_page_size = {"pageSize": -1}
         api_manager.movies_api.get_movies(filter_by_page_size, 400)
 
-    def test_get_movies_with_page_zero(self, api_manager: ApiManager):
+    @pytest.mark.api
+    @pytest.mark.regression
+    def test_get_movies_with_page_zero(self, api_manager: ApiManager) -> None:
         """
         Тест на получение афиш фильмов с "page" равным 0.
         """
         filter_by_page = {"page": 0}
         api_manager.movies_api.get_movies(filter_by_page, 400)
 
-    def test_get_movies_with_negative_page(self, api_manager: ApiManager):
+    @pytest.mark.api
+    @pytest.mark.regression
+    def test_get_movies_with_negative_page(self, api_manager: ApiManager) -> None:
         """
         Тест на получение афиш фильмов с отрицательным "page".
         """

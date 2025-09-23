@@ -8,16 +8,16 @@ faker = Faker()
 class DataGeneratorForAuthAPI:
 
     @staticmethod
-    def generate_random_email():
+    def generate_random_email() -> str:
         random_string = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
         return f"kek{random_string}@gmail.com"
 
     @staticmethod
-    def generate_random_full_name():
+    def generate_random_full_name() -> str:
         return f"{faker.first_name()} {faker.last_name()}"
 
     @staticmethod
-    def generate_random_password():
+    def generate_random_password() -> str:
         """
         Генерация пароля, соответствующего требованиям:
         - Минимум 1 буква.
@@ -45,29 +45,29 @@ class DataGeneratorForAuthAPI:
 class DataGeneratorForMoviesAPI:
 
     @staticmethod
-    def generate_random_name():
+    def generate_random_name() -> str:
         return f"{faker.catch_phrase()}"
 
     @staticmethod
-    def generate_random_image_url():
+    def generate_random_image_url() -> str:
         return f"{faker.image_url()}"
 
     @staticmethod
-    def generate_random_price():
+    def generate_random_price() -> int:
         return random.randint(100, 2000)
 
     @staticmethod
-    def generate_random_description():
+    def generate_random_description() -> str:
         return f"{faker.text(max_nb_chars=200)}"
 
     @staticmethod
-    def generate_random_location():
+    def generate_random_location() -> str:
         return random.choice(["SPB", "MSK"])
 
     @staticmethod
-    def generate_random_published():
+    def generate_random_published() -> bool:
         return random.choice([True, False])
 
     @staticmethod
-    def generate_random_genre_id():
+    def generate_random_genre_id() -> int:
         return random.randint(1, 10)

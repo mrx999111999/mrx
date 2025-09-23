@@ -9,6 +9,7 @@ HEADERS = {
 LOGIN_ENDPOINT = "/login"
 REGISTER_ENDPOINT = "/register"
 MOVIES_ENDPOINT = "/movies"
+USER_ENDPOINT = "/user"
 
 CREDS_FOR_SUPER_ADMIN = {
     "email": "api1@gmail.com",
