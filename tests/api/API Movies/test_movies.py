@@ -1,6 +1,7 @@
 import random
 import pytest
 from api.api_manager import ApiManager
+from conftest import created_movie
 from entities.user import User
 from utils.data_generator import DataGeneratorForMoviesAPI
 
@@ -177,11 +178,13 @@ class TestMoviesApi:
 
     @pytest.mark.api
     @pytest.mark.smoke
-    def test_create_movie(self, super_admin: User, test_movie: dict[str, str | int | float | bool]) -> None:
+    def test_create_movie(self, super_admin: User, test_movie: dict[str, str | int | float | bool], db_helper) -> None:
         """
         Тест на создание фильма с ролью "SUPER_ADMIN".
         """
         response = super_admin.api.movies_api.create_movie(test_movie).json()
+        created_movie_in_db = db_helper.get_movie_by_id_from_db(response["id"]).to_dict()
+
 
         # Проверки
         assert "id" in response, "id отсутствует в ответе"

@@ -2,16 +2,19 @@ import requests
 import pytest
 from requests import Session
 from typing import Any, Generator, Callable
+from db_requester.db_client import get_db_session
 from constants import REGISTER_ENDPOINT, MOVIES_ENDPOINT, USER_ENDPOINT
+from models.test_user import UserRegisterRequest
 from utils.data_generator import DataGeneratorForAuthAPI, DataGeneratorForMoviesAPI
 from api.api_manager import ApiManager
 from entities.user import User
 from resources.user_creds import SuperAdminCreds
 from enums.roles import Roles
+from db_requester.db_helpers import DBHelper
 
 
 @pytest.fixture(scope="function")
-def test_user() -> dict[str, Any]:
+def test_user() -> UserRegisterRequest:
     """
     Фикстура подготавливает данные для регистрации пользователя.
     """
@@ -19,30 +22,25 @@ def test_user() -> dict[str, Any]:
     random_name = DataGeneratorForAuthAPI.generate_random_full_name()
     random_password = DataGeneratorForAuthAPI.generate_random_password()
 
-    return {
-        "email": random_email,
-        "fullName": random_name,
-        "password": random_password,
-        "passwordRepeat": random_password,
-        "roles": [Roles.USER.value]
-    }
+    return UserRegisterRequest(
+        email=random_email,
+        fullName=random_name,
+        password=random_password,
+        passwordRepeat=random_password,
+        roles=[Roles.USER]
+    )
 
 
 @pytest.fixture(scope="function")
-def creation_user_data(test_user: dict[str, Any]) -> dict[str, Any]:
+def creation_user_data(test_user: UserRegisterRequest) -> UserRegisterRequest:
     """
     Фикстура подготавливает данные для создания пользователя.
     """
-    updated_data = test_user.copy()
-    updated_data.update({
-        "verified": True,
-        "banned": False
-    })
-    return updated_data
+    return test_user.model_copy(update={"verified": True, "banned": False})
 
 
 @pytest.fixture(scope="function")
-def registered_user(api_manager: ApiManager, test_user: dict[str, Any]) -> dict[str, Any]:
+def registered_user(api_manager: ApiManager, test_user: UserRegisterRequest) -> dict[str, Any]:
     """
     Фикстура для регистрации и получения данных зарегистрированного пользователя.
     """
@@ -51,10 +49,9 @@ def registered_user(api_manager: ApiManager, test_user: dict[str, Any]) -> dict[
         endpoint=REGISTER_ENDPOINT,
         data=test_user,
         expected_status=201
-    )
-    response_data = response.json()
-    registered_user = test_user.copy()
-    registered_user["id"] = response_data["id"]
+    ).json()
+    registered_user = test_user.model_dump()
+    registered_user["id"] = response["id"]
     return registered_user
 
 
@@ -113,38 +110,39 @@ def super_admin(user_session: Callable[[], ApiManager]) -> User:
 
 
 @pytest.fixture
-def common(user_session: Callable[[], ApiManager], super_admin: User, creation_user_data: dict[str, Any]) -> User:
+def common(user_session: Callable[[], ApiManager], super_admin: User, creation_user_data: UserRegisterRequest) -> User:
     """
     Фикстура создает обычного пользователя через суперадмина.
     """
+    user_data = creation_user_data.model_copy()
     new_session = user_session()
 
     common_user = User(
-        creation_user_data['email'],
-        creation_user_data['password'],
+        user_data.email,
+        user_data.password,
         [Roles.USER.value],
         new_session)
 
-    super_admin.api.user_api.create_user(creation_user_data)
+    super_admin.api.user_api.create_user(user_data)
     common_user.api.auth_api.authenticate(common_user.creds)
     return common_user
 
 
 @pytest.fixture
-def admin(user_session: Callable[[], ApiManager], super_admin: User, creation_user_data: dict[str, Any]) -> User:
+def admin(user_session: Callable[[], ApiManager], super_admin: User, creation_user_data: UserRegisterRequest) -> User:
     """
     Фикстура создает обычного пользователя через суперадмина и повышает его роль до ADMIN через PATCH.
     """
+    admin_data = creation_user_data.model_copy()
+    admin_data.email = DataGeneratorForAuthAPI.generate_random_email()
+    admin_data.password = DataGeneratorForAuthAPI.generate_random_password()
+    admin_data.fullName = DataGeneratorForAuthAPI.generate_random_full_name()
+
     new_session = user_session()
 
-    admin_data = creation_user_data.copy()
-    admin_data["email"] = DataGeneratorForAuthAPI.generate_random_email()
-    admin_data["password"] = DataGeneratorForAuthAPI.generate_random_password()
-    admin_data["fullName"] = DataGeneratorForAuthAPI.generate_random_full_name()
-
     admin_user = User(
-        admin_data['email'],
-        admin_data['password'],
+        admin_data.email,
+        admin_data.password,
         [Roles.ADMIN.value],
         new_session)
 
@@ -197,3 +195,36 @@ def created_movie(super_admin: User, test_movie: dict[str, str | int | float | b
     created_movie = test_movie.copy()
     created_movie["id"] = response_data["id"]
     return created_movie
+
+
+@pytest.fixture(scope="module")
+def db_session() -> Generator[Session, None, None]:
+    """
+    Фикстура, которая создает и возвращает сессию для работы с базой данных
+    После завершения теста сессия автоматически закрывается
+    """
+    db_session = get_db_session()
+    yield db_session
+    db_session.close()
+
+
+@pytest.fixture(scope="function")
+def db_helper(db_session) -> DBHelper:
+    """
+    Фикстура для экземпляра хелпера
+    """
+    database_helper = DBHelper(db_session)
+    return database_helper
+
+
+@pytest.fixture(scope="function")
+def created_test_user(db_helper):
+    """
+    Фикстура, которая создает тестового пользователя в БД
+    и удаляет его после завершения теста
+    """
+    user = db_helper.create_test_user(DataGeneratorForAuthAPI.generate_user_data())
+    yield user
+    # Cleanup после теста
+    if db_helper.get_user_by_id(user.id):
+        db_helper.delete_user(user)

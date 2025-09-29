@@ -4,6 +4,7 @@ import os
 import requests
 from requests import Session
 from typing import Any
+from pydantic import BaseModel
 
 
 class CustomRequester:
@@ -28,7 +29,7 @@ class CustomRequester:
         self.logger.setLevel(logging.INFO)
 
     def send_request(self, method: str, endpoint: str, params: dict[str, Any] | None = None,
-                     data: dict[str, Any] | None = None,
+                     data: dict[str, Any] | BaseModel | None = None,
                      expected_status: int = 200,
                      need_logging: bool = True) -> requests.Response:
         """
@@ -41,6 +42,8 @@ class CustomRequester:
         :param need_logging: Флаг для логирования (по умолчанию True).
         :return: Объект ответа requests.Response.
         """
+        if isinstance(data, BaseModel):
+            data = data.model_dump(exclude_unset=True)
         url = f"{self.base_url}{endpoint}"
         response = self.session.request(method, url, params, json=data, headers=self.headers)
         if need_logging:
@@ -74,6 +77,8 @@ class CustomRequester:
             if hasattr(request, 'body') and request.body is not None:
                 if isinstance(request.body, bytes):
                     body = request.body.decode('utf-8')
+                elif isinstance(request.body, str):
+                    body = request.body
                 body = f"-d '{body}' \n" if body != '{}' else ''
 
             # Логируем запрос
@@ -89,6 +94,10 @@ class CustomRequester:
             response_status = response.status_code
             is_success = response.ok
             response_data = response.text
+            if not is_success:
+                self.logger.info(f"\tRESPONSE:"
+                                 f"\nSTATUS_CODE: {RED}{response_status}{RESET}"
+                                 f"\nDATA: {RED}{response_data}{RESET}")
 
             # Попытка форматировать JSON
             try:
