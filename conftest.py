@@ -4,7 +4,7 @@ from requests import Session
 from typing import Any, Generator, Callable
 from db_requester.db_client import get_db_session
 from constants import REGISTER_ENDPOINT, MOVIES_ENDPOINT, USER_ENDPOINT
-from models.test_user import UserRegisterRequest
+from models.test_user import UserRegisterRequest, CreateMovieRequest
 from utils.data_generator import DataGeneratorForAuthAPI, DataGeneratorForMoviesAPI
 from api.api_manager import ApiManager
 from entities.user import User
@@ -36,6 +36,7 @@ def creation_user_data(test_user: UserRegisterRequest) -> UserRegisterRequest:
     """
     Фикстура подготавливает данные для создания пользователя.
     """
+
     return test_user.model_copy(update={"verified": True, "banned": False})
 
 
@@ -156,7 +157,7 @@ def admin(user_session: Callable[[], ApiManager], super_admin: User, creation_us
 
 
 @pytest.fixture(scope="function")
-def test_movie() -> dict[str, str | int | float | bool]:
+def test_movie() -> CreateMovieRequest:
     """
     Генерация случайного фильма для тестов.
     """
@@ -168,15 +169,15 @@ def test_movie() -> dict[str, str | int | float | bool]:
     random_published = DataGeneratorForMoviesAPI.generate_random_published()
     random_genre_id = DataGeneratorForMoviesAPI.generate_random_genre_id()
 
-    return {
-        "name": random_name,
-        "imageUrl": random_image_url,
-        "price": random_price,
-        "description": random_description,
-        "location": random_location,
-        "published": random_published,
-        "genreId": random_genre_id
-    }
+    return CreateMovieRequest(
+        name=random_name,
+        imageUrl=random_image_url,
+        price=random_price,
+        description=random_description,
+        location=random_location,
+        published=random_published,
+        genreId=random_genre_id
+    )
 
 
 @pytest.fixture(scope="function")

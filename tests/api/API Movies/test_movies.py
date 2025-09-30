@@ -3,6 +3,7 @@ import pytest
 from api.api_manager import ApiManager
 from conftest import created_movie
 from entities.user import User
+from models.test_user import GetMoviesResponse, CreateMovieRequest, CreateMovieResponse
 from utils.data_generator import DataGeneratorForMoviesAPI
 
 
@@ -13,16 +14,21 @@ class TestMoviesApi:
         """
         Тест на получение афиш фильмов с фильтрами по умолчанию.
         """
-        response = api_manager.movies_api.get_movies()
-        response_data = response.json()
+        response = api_manager.movies_api.get_movies().json()
+        response_data = GetMoviesResponse(**response)
+
+        # Создаем множество, которое содержит все ключи словарей, находящихся в ответе в списке movies
+        required_fields = {
+            "id", "name", "price", "description", "imageUrl",
+            "location", "published", "genreId", "genre", "createdAt", "rating"
+        }
 
         # Проверки
-        assert "movies" in response_data, "movies отсутствует в ответе"
-        assert response_data["movies"] != [], "Список фильмов пустой"
-        assert "count" in response_data, "count отсутствует в ответе"
-        assert "page" in response_data, "page отсутствует в ответе"
-        assert "pageSize" in response_data, "pageSize отсутствует в ответе"
-        assert "pageCount" in response_data, "pageCount отсутствует в ответе"
+        assert len(
+            response_data.movies) == response_data.pageSize, "Количество отображенных фильмов на странице не равно переданному в pageSize"
+        # Проверка, что в словарях из списка movies содержатся все обязательные поля
+        for movie in response_data.movies:
+            assert required_fields.issubset(movie.keys()), f"Отсутствуют поля в movie: {required_fields - movie.keys()}"
 
     @pytest.mark.api
     @pytest.mark.smoke
@@ -31,19 +37,13 @@ class TestMoviesApi:
         Тест на получение афиш фильмов с явным указанием фильтра "pageSize".
         """
         filter_by_page_size = {"pageSize": random.randint(1, 10)}
-        response = api_manager.movies_api.get_movies(filter_by_page_size)
-        response_data = response.json()
+        response = api_manager.movies_api.get_movies(filter_by_page_size).json()
+        response_data = GetMoviesResponse(**response)
 
         # Проверки
-        assert "movies" in response_data, "movies отсутствует в ответе"
-        assert response_data["movies"] != [], "Список фильмов пустой"
-        assert "count" in response_data, "count отсутствует в ответе"
-        assert "page" in response_data, "page отсутствует в ответе"
-        assert "pageSize" in response_data, "pageSize отсутствует в ответе"
-        assert response_data["pageSize"] == filter_by_page_size["pageSize"], "pageSize не совпадает с переданным"
-        assert len(response_data["movies"]) == filter_by_page_size[
+        assert response_data.pageSize == filter_by_page_size["pageSize"], "pageSize не совпадает с переданным"
+        assert len(response_data.movies) == filter_by_page_size[
             "pageSize"], "Количество отображенных фильмов на странице не равно переданному в pageSize"
-        assert "pageCount" in response_data, "pageCount отсутствует в ответе"
 
     @pytest.mark.api
     @pytest.mark.smoke
@@ -52,17 +52,11 @@ class TestMoviesApi:
         Тест на получение афиш фильмов с явным указанием фильтра "page".
         """
         filter_by_page = {"page": random.randint(1, 10)}
-        response = api_manager.movies_api.get_movies(filter_by_page)
-        response_data = response.json()
+        response = api_manager.movies_api.get_movies(filter_by_page).json()
+        response_data = GetMoviesResponse(**response)
 
         # Проверки
-        assert "movies" in response_data, "movies отсутствует в ответе"
-        assert response_data["movies"] != [], "Список фильмов пустой"
-        assert "count" in response_data, "count отсутствует в ответе"
-        assert "page" in response_data, "page отсутствует в ответе"
         assert response_data["page"] == filter_by_page["page"], "page не совпадает с переданным"
-        assert "pageSize" in response_data, "pageSize отсутствует в ответе"
-        assert "pageCount" in response_data, "pageCount отсутствует в ответе"
 
     @pytest.mark.api
     @pytest.mark.smoke
@@ -71,18 +65,12 @@ class TestMoviesApi:
         Тест на получение афиш фильмов с явным указанием фильтра "minPrice".
         """
         filter_by_min_price = {"minPrice": random.randint(1, 500)}
-        response = api_manager.movies_api.get_movies(filter_by_min_price)
-        response_data = response.json()
+        response = api_manager.movies_api.get_movies(filter_by_min_price).json()
+        response_data = GetMoviesResponse(**response)
 
         # Проверки
-        for movie in response_data["movies"]:
+        for movie in response_data.movies:
             assert movie["price"] > filter_by_min_price["minPrice"], "price меньше, чем minPrice"
-        assert "movies" in response_data, "movies отсутствует в ответе"
-        assert response_data["movies"] != [], "Список фильмов пустой"
-        assert "count" in response_data, "count отсутствует в ответе"
-        assert "page" in response_data, "page отсутствует в ответе"
-        assert "pageSize" in response_data, "pageSize отсутствует в ответе"
-        assert "pageCount" in response_data, "pageCount отсутствует в ответе"
 
     @pytest.mark.api
     @pytest.mark.smoke
@@ -91,18 +79,12 @@ class TestMoviesApi:
         Тест на получение афиш фильмов с явным указанием фильтра "maxPrice".
         """
         filter_by_max_price = {"maxPrice": random.randint(1500, 5000)}
-        response = api_manager.movies_api.get_movies(filter_by_max_price)
-        response_data = response.json()
+        response = api_manager.movies_api.get_movies(filter_by_max_price).json()
+        response_data = GetMoviesResponse(**response)
 
         # Проверки
-        for movie in response_data["movies"]:
+        for movie in response_data.movies:
             assert movie["price"] < filter_by_max_price["maxPrice"], "price больше, чем maxPrice"
-        assert "movies" in response_data, "movies отсутствует в ответе"
-        assert response_data["movies"] != [], "Список фильмов пустой"
-        assert "count" in response_data, "count отсутствует в ответе"
-        assert "page" in response_data, "page отсутствует в ответе"
-        assert "pageSize" in response_data, "pageSize отсутствует в ответе"
-        assert "pageCount" in response_data, "pageCount отсутствует в ответе"
 
     @pytest.mark.api
     @pytest.mark.smoke
@@ -112,18 +94,12 @@ class TestMoviesApi:
         """
         locations = [DataGeneratorForMoviesAPI.generate_random_location()]
         filter_by_locations = {"locations": locations}
-        response = api_manager.movies_api.get_movies(filter_by_locations)
-        response_data = response.json()
+        response = api_manager.movies_api.get_movies(filter_by_locations).json()
+        response_data = GetMoviesResponse(**response)
 
         # Проверки
-        for movie in response_data["movies"]:
-            assert movie["location"] == locations[0], "location не совпадает"
-        assert "movies" in response_data, "movies отсутствует в ответе"
-        assert response_data["movies"] != [], "Список фильмов пустой"
-        assert "count" in response_data, "count отсутствует в ответе"
-        assert "page" in response_data, "page отсутствует в ответе"
-        assert "pageSize" in response_data, "pageSize отсутствует в ответе"
-        assert "pageCount" in response_data, "pageCount отсутствует в ответе"
+        for movie in response_data.movies:
+            assert movie["location"] in locations, "location не совпадает"
 
     @pytest.mark.api
     @pytest.mark.smoke
@@ -133,18 +109,12 @@ class TestMoviesApi:
         """
         genre_id = DataGeneratorForMoviesAPI.generate_random_genre_id()
         filter_by_genre_id = {"genreId": genre_id}
-        response = api_manager.movies_api.get_movies(filter_by_genre_id)
-        response_data = response.json()
+        response = api_manager.movies_api.get_movies(filter_by_genre_id).json()
+        response_data = GetMoviesResponse(**response)
 
         # Проверки
-        for movie in response_data["movies"]:
+        for movie in response_data.movies:
             assert movie["genreId"] == genre_id, "genreId не совпадает"
-        assert "movies" in response_data, "movies отсутствует в ответе"
-        assert response_data["movies"] != [], "Список фильмов пустой"
-        assert "count" in response_data, "count отсутствует в ответе"
-        assert "page" in response_data, "page отсутствует в ответе"
-        assert "pageSize" in response_data, "pageSize отсутствует в ответе"
-        assert "pageCount" in response_data, "pageCount отсутствует в ответе"
 
     @pytest.mark.api
     @pytest.mark.regression
@@ -162,49 +132,31 @@ class TestMoviesApi:
             "genreId": genre_id,
         }
         response = api_manager.movies_api.get_movies(combined_filtered).json()
+        response_data = GetMoviesResponse(**response)
 
         # Проверки
-        for movie in response["movies"]:
+        for movie in response_data.movies:
             assert min_price <= movie["price"] <= max_price, "price д.б >= minPrice и <= maxPrice"
-            assert movie["location"] == locations, "locations не совпадает"
+            assert movie["location"] == locations, "location не совпадает"
             assert movie["genreId"] == genre_id, "genreId не совпадает"
-
-        assert "movies" in response, "movies отсутствует в ответе"
-        assert response["movies"] != [], "Список фильмов пустой"
-        assert "count" in response, "count отсутствует в ответе"
-        assert "page" in response, "page отсутствует в ответе"
-        assert "pageSize" in response, "pageSize отсутствует в ответе"
-        assert "pageCount" in response, "pageCount отсутствует в ответе"
 
     @pytest.mark.api
     @pytest.mark.smoke
-    def test_create_movie(self, super_admin: User, test_movie: dict[str, str | int | float | bool], db_helper) -> None:
+    def test_create_movie(self, super_admin: User, test_movie: CreateMovieRequest, db_helper) -> None:
         """
         Тест на создание фильма с ролью "SUPER_ADMIN".
         """
         response = super_admin.api.movies_api.create_movie(test_movie).json()
-        created_movie_in_db = db_helper.get_movie_by_id_from_db(response["id"]).to_dict()
-
+        response_data = CreateMovieResponse(**response)
 
         # Проверки
-        assert "id" in response, "id отсутствует в ответе"
-        assert "name" in response, "name отсутствует в ответе"
-        assert test_movie["name"] == response["name"], "name не совпадает"
-        assert "price" in response, "price отсутствует в ответе"
-        assert test_movie["price"] == response["price"], "price не совпадает"
-        assert "description" in response, "description отсутствует в ответе"
-        assert test_movie["description"] == response["description"], "description не совпадает"
-        assert "imageUrl" in response, "imageUrl отсутствует в ответе"
-        assert test_movie["imageUrl"] == response["imageUrl"], "imageUrl не совпадает"
-        assert "location" in response, "location отсутствует в ответе"
-        assert test_movie["location"] == response["location"], "location не совпадает"
-        assert "published" in response, "published отсутствует в ответе"
-        assert test_movie["published"] == response["published"], "published не совпадает"
-        assert "genreId" in response, "genreId отсутствует в ответе"
-        assert test_movie["genreId"] == response["genreId"], "genreId не совпадает"
-        assert "genre" in response, "genre отсутствует в ответе"
-        assert "createdAt" in response, "createdAt отсутствует в ответе"
-        assert "rating" in response, "rating отсутствует в ответе"
+        assert test_movie.name == response_data.name, "name не совпадает"
+        assert test_movie.price == response_data.price, "price не совпадает"
+        assert test_movie.description == response_data.description, "description не совпадает"
+        assert test_movie.imageUrl == response_data.imageUrl, "imageUrl не совпадает"
+        assert test_movie.location == response_data.location, "location не совпадает"
+        assert test_movie.published == response_data.published, "published не совпадает"
+        assert test_movie.genreId == response_data.genreId, "genreId не совпадает"
 
     @pytest.mark.api
     @pytest.mark.smoke
@@ -238,7 +190,7 @@ class TestMoviesApi:
     @pytest.mark.api
     @pytest.mark.regression
     def test_create_movie_without_name(self, super_admin: User,
-                                       test_movie: dict[str, str | int | float | bool]) -> None:
+                                       test_movie: CreateMovieRequest) -> None:
         """
         Тест на создание фильма без "name" в запросе.
         """

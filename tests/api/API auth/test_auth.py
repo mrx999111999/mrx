@@ -2,7 +2,7 @@ import pytest
 from typing import Any
 
 from enums.roles import Roles
-from models.test_user import UserRegisterRequest, UserRegisterResponse
+from models.test_user import UserRegisterRequest, UserRegisterResponse, UserLoginRequest, UserLoginResponse
 from api.api_manager import ApiManager
 
 
@@ -13,12 +13,12 @@ class TestAuth:
         """
         Тест на регистрацию пользователя.
         """
-        response = api_manager.auth_api.register_user(test_user)
-        response_data = UserRegisterResponse(**response.json())
+        response = api_manager.auth_api.register_user(test_user).json()
+        response_data = UserRegisterResponse(**response)
 
         # Проверки
         assert response_data.email == test_user.email, "Email не совпадает"
-        assert Roles.USER in response_data.roles, "Роль USER должна быть у пользователя"
+        assert Roles.USER.value in response_data.roles, "Роль USER должна быть у пользователя"
 
     @pytest.mark.api
     @pytest.mark.smoke
@@ -26,15 +26,18 @@ class TestAuth:
         """
         Тест на авторизацию пользователя.
         """
-        login_data = {
-            "email": registered_user["email"],
-            "password": registered_user["password"]
-        }
+        login_data = UserLoginRequest(
+            email=registered_user["email"],
+            password=registered_user["password"]
+        )
         response = api_manager.auth_api.login_user(login_data).json()
+        response_data = UserLoginResponse(**response)
 
         # Проверки
-        assert "accessToken" in response, "Токен доступа отсутствует в ответе"
-        assert response["user"]["email"] == registered_user["email"], "Email не совпадает"
+        assert response_data.user["id"] == registered_user["id"], "id не совпадает"
+        assert response_data.user["email"] == registered_user["email"], "email не совпадает"
+        assert response_data.user["fullName"] == registered_user["fullName"], "fullName не совпадает"
+        assert response_data.user["roles"] == registered_user["roles"], "roles не совпадает"
 
     @pytest.mark.api
     @pytest.mark.regression
