@@ -3,6 +3,7 @@ from typing import Any
 from requests import Session
 from constants import BASE_URL_FOR_MOVIES_API, MOVIES_ENDPOINT
 from custom_requester.custom_requester import CustomRequester
+from models.models import CreateMovieRequest
 
 
 class MoviesAPI(CustomRequester):
@@ -26,7 +27,7 @@ class MoviesAPI(CustomRequester):
             params=params
         )
 
-    def create_movie(self, movie_data: dict[str, str | int | float | bool],
+    def create_movie(self, movie_data: dict[str, str | int | float | bool] | CreateMovieRequest,
                      expected_status: int = 201) -> requests.Response:
         """
         Создание фильма.

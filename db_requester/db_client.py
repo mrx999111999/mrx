@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from resources.db_creds import DataBaseCreds
+from sqlalchemy.orm import Session as SASession
 
 DB_USER = DataBaseCreds.DB_USER
 DB_PASSWORD = DataBaseCreds.DB_PASSWORD
@@ -18,6 +19,6 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-def get_db_session():
+def get_db_session() -> SASession:
     """Создает новую сессию БД"""
     return SessionLocal()

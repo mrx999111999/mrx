@@ -1,7 +1,8 @@
 import datetime
 import random
 import string
-
+from typing import Any
+from uuid import uuid4
 from faker import Faker
 
 faker = Faker()
@@ -44,12 +45,10 @@ class DataGeneratorForAuthAPI:
         return ''.join(password)
 
     @staticmethod
-    def generate_user_data() -> dict:
+    def generate_user_data() -> dict[str, Any]:
         """Генерирует данные для тестового пользователя"""
-        from uuid import uuid4
-
         return {
-            'id': f'{uuid4()}',  # генерируем UUID как строку
+            'id': str(uuid4()),  # генерируем UUID как строку
             'email': DataGeneratorForAuthAPI.generate_random_email(),
             'full_name': DataGeneratorForAuthAPI.generate_random_full_name(),
             'password': DataGeneratorForAuthAPI.generate_random_password(),
@@ -65,11 +64,11 @@ class DataGeneratorForMoviesAPI:
 
     @staticmethod
     def generate_random_name() -> str:
-        return f"{faker.catch_phrase()}"
+        return faker.catch_phrase()
 
     @staticmethod
     def generate_random_image_url() -> str:
-        return f"{faker.image_url()}"
+        return faker.image_url()
 
     @staticmethod
     def generate_random_price() -> int:
@@ -77,7 +76,7 @@ class DataGeneratorForMoviesAPI:
 
     @staticmethod
     def generate_random_description() -> str:
-        return f"{faker.text(max_nb_chars=200)}"
+        return faker.text(max_nb_chars=200)
 
     @staticmethod
     def generate_random_location() -> str:

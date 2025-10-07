@@ -1,10 +1,12 @@
 import requests
 import pytest
 from requests import Session
-from typing import Any, Generator, Callable
+from sqlalchemy.orm import Session as SASession
+from typing import Generator, Callable
+
+from db_models.user import UserDBModel
 from db_requester.db_client import get_db_session
-from constants import REGISTER_ENDPOINT, MOVIES_ENDPOINT, USER_ENDPOINT
-from models.test_user import UserRegisterRequest, CreateMovieRequest
+from models.models import UserRegisterRequest, CreateMovieRequest, UserRegisterResponse, CreateMovieResponse
 from utils.data_generator import DataGeneratorForAuthAPI, DataGeneratorForMoviesAPI
 from api.api_manager import ApiManager
 from entities.user import User
@@ -36,23 +38,17 @@ def creation_user_data(test_user: UserRegisterRequest) -> UserRegisterRequest:
     """
     Фикстура подготавливает данные для создания пользователя.
     """
-
     return test_user.model_copy(update={"verified": True, "banned": False})
 
 
 @pytest.fixture(scope="function")
-def registered_user(api_manager: ApiManager, test_user: UserRegisterRequest) -> dict[str, Any]:
+def registered_user(api_manager: ApiManager, test_user: UserRegisterRequest) -> UserRegisterResponse:
     """
     Фикстура для регистрации и получения данных зарегистрированного пользователя.
     """
-    response = api_manager.auth_api.send_request(
-        method="POST",
-        endpoint=REGISTER_ENDPOINT,
-        data=test_user,
-        expected_status=201
-    ).json()
-    registered_user = test_user.model_dump()
-    registered_user["id"] = response["id"]
+    response = api_manager.auth_api.register_user(test_user).json()
+    registered_user = UserRegisterResponse(**response)
+
     return registered_user
 
 
@@ -116,6 +112,10 @@ def common(user_session: Callable[[], ApiManager], super_admin: User, creation_u
     Фикстура создает обычного пользователя через суперадмина.
     """
     user_data = creation_user_data.model_copy()
+    user_data.email = DataGeneratorForAuthAPI.generate_random_email()
+    user_data.password = DataGeneratorForAuthAPI.generate_random_password()
+    user_data.fullName = DataGeneratorForAuthAPI.generate_random_full_name()
+
     new_session = user_session()
 
     common_user = User(
@@ -148,10 +148,7 @@ def admin(user_session: Callable[[], ApiManager], super_admin: User, creation_us
         new_session)
 
     response = super_admin.api.user_api.create_user(admin_data).json()
-    super_admin.api.auth_api.send_request(
-        method="PATCH",
-        endpoint=f'{USER_ENDPOINT}/{response["id"]}',
-        data={"roles": ["ADMIN"]})
+    super_admin.api.user_api.update_user(response["id"], {"roles": ["ADMIN"]})
     admin_user.api.auth_api.authenticate(admin_user.creds)
     return admin_user
 
@@ -181,25 +178,17 @@ def test_movie() -> CreateMovieRequest:
 
 
 @pytest.fixture(scope="function")
-def created_movie(super_admin: User, test_movie: dict[str, str | int | float | bool]) -> dict[
-    str, str | int | float | bool]:
+def created_movie(super_admin: User, test_movie: CreateMovieRequest) -> CreateMovieResponse:
     """
     Фикстура для создания фильма.
     """
-    response = super_admin.api.movies_api.send_request(
-        method="POST",
-        endpoint=MOVIES_ENDPOINT,
-        data=test_movie,
-        expected_status=201
-    )
-    response_data = response.json()
-    created_movie = test_movie.copy()
-    created_movie["id"] = response_data["id"]
+    response = super_admin.api.movies_api.create_movie(test_movie).json()
+    created_movie = CreateMovieResponse(**response)
     return created_movie
 
 
 @pytest.fixture(scope="module")
-def db_session() -> Generator[Session, None, None]:
+def db_session() -> Generator[SASession, None, None]:
     """
     Фикстура, которая создает и возвращает сессию для работы с базой данных
     После завершения теста сессия автоматически закрывается
@@ -210,7 +199,7 @@ def db_session() -> Generator[Session, None, None]:
 
 
 @pytest.fixture(scope="function")
-def db_helper(db_session) -> DBHelper:
+def db_helper(db_session: SASession) -> DBHelper:
     """
     Фикстура для экземпляра хелпера
     """
@@ -219,7 +208,7 @@ def db_helper(db_session) -> DBHelper:
 
 
 @pytest.fixture(scope="function")
-def created_test_user(db_helper):
+def created_test_user(db_helper: DBHelper) -> Generator[UserDBModel, None, None]:
     """
     Фикстура, которая создает тестового пользователя в БД
     и удаляет его после завершения теста

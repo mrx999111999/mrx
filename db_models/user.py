@@ -1,11 +1,14 @@
 from sqlalchemy import Column, String, Boolean, DateTime
 from sqlalchemy.orm import declarative_base
-from typing import Dict, Any
+from typing import Any
 
 Base = declarative_base()
 
 
 class UserDBModel(Base):
+    """
+    Модель пользователя в базе данных
+    """
     __tablename__ = 'users'
 
     id = Column(String, primary_key=True)
@@ -18,7 +21,7 @@ class UserDBModel(Base):
     banned = Column(Boolean)
     roles = Column(String)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Преобразование в словарь"""
         return {
             'id': self.id,

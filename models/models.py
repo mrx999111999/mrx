@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional, Dict, Any, List
+from typing import Dict, Any, List
 from enums.roles import Roles
 import datetime
 import re
@@ -13,13 +13,15 @@ class UserRegisterRequest(BaseModel):
     password: str = Field(min_length=8, max_length=20, description="Пароль пользователя")
     passwordRepeat: str = Field(min_length=8, max_length=20, description="Повтор пароля для подтверждения")
     roles: list[Roles] = Field(min_length=1, description="Роли пользователя")
-    banned: Optional[bool] = None
-    verified: Optional[bool] = None
+    banned: bool | None = None
+    verified: bool | None = None
 
     @classmethod
     @field_validator("password")
     def validate_password_strength(cls, value: str) -> str:
         """Валидация сложности пароля по требованиям"""
+
+        # Проверка длины пароля
         if len(value) < 8 or len(value) > 20:
             raise ValueError("Пароль должен быть от 8 до 20 символов")
 
@@ -44,12 +46,6 @@ class UserRegisterRequest(BaseModel):
         if "password" in values.data and value != values.data["password"]:
             raise ValueError("Пароли не совпадают")
         return value
-
-    # Добавляем кастомный JSON-сериализатор для Enum
-    class Config:
-        json_encoders = {
-            Roles: lambda v: v.value  # Преобразуем Enum в строку
-        }
 
 
 class UserRegisterResponse(BaseModel):
@@ -139,3 +135,7 @@ class CreateMovieResponse(BaseModel):
         except ValueError:
             raise ValueError("Некорректный формат даты и времени")
         return value
+
+
+class DeleteMovieResponse(CreateMovieResponse):
+    reviews: list = Field(default_factory=list, description="Список отзывов")

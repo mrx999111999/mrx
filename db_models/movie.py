@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Boolean, DateTime, Integer, Float
 from sqlalchemy.orm import declarative_base
-from typing import Dict, Any
+from typing import Any
 
 Base = declarative_base()
 
@@ -22,7 +22,7 @@ class MovieDBModel(Base):
     genre_id = Column(Integer)
     created_at = Column(DateTime)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Преобразование в словарь"""
         return {
             'id': self.id,
