@@ -1,5 +1,4 @@
 import requests
-from typing import Any
 from requests import Session
 from constants import REGISTER_ENDPOINT
 from constants import LOGIN_ENDPOINT
@@ -16,7 +15,7 @@ class AuthAPI(CustomRequester):
     def __init__(self, session: Session) -> None:
         super().__init__(session=session, base_url=BASE_URL_FOR_AUTH_API)
 
-    def register_user(self, user_data: dict[str, Any] | UserRegisterRequest,
+    def register_user(self, user_data: UserRegisterRequest,
                       expected_status: int = 201) -> requests.Response:
         """
         Регистрация нового пользователя.
@@ -30,7 +29,7 @@ class AuthAPI(CustomRequester):
             expected_status=expected_status
         )
 
-    def login_user(self, login_data: dict[str, str] | UserLoginRequest,
+    def login_user(self, login_data: UserLoginRequest,
                    expected_status: int = 200) -> requests.Response:
         """
         Авторизация пользователя.

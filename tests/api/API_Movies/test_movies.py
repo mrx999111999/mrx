@@ -6,7 +6,8 @@ from api.api_manager import ApiManager
 from conftest import created_movie
 from db_requester.db_helpers import DBHelper
 from entities.user import User
-from models.models import GetMoviesResponse, CreateMovieRequest, CreateMovieResponse, DeleteMovieResponse
+from models.models import GetMoviesResponse, CreateMovieRequest, CreateMovieResponse, DeleteMovieResponse, \
+    ParamsForGetMoviesRequest
 from utils.data_generator import DataGeneratorForMoviesAPI
 
 
@@ -52,15 +53,15 @@ class TestMoviesApi:
         Тест на получение афиш фильмов с явным указанием фильтра "pageSize".
         """
         with allure.step("Получение афиш фильмов"):
-            filter_by_page_size = {"pageSize": random.randint(1, 10)}
+            filter_by_page_size = ParamsForGetMoviesRequest(pageSize=random.randint(1, 10))
             response = api_manager.movies_api.get_movies(filter_by_page_size).json()
             response_data = GetMoviesResponse(**response)
 
         with allure.step("Проверки API ответа"):
             with check:
-                assert response_data.pageSize == filter_by_page_size["pageSize"], "pageSize не совпадает с переданным"
-                assert len(response_data.movies) == filter_by_page_size[
-                    "pageSize"], "Количество отображенных фильмов на странице не равно переданному в pageSize"
+                assert response_data.pageSize == filter_by_page_size.pageSize, "pageSize не совпадает с переданным"
+                assert len(
+                    response_data.movies) == filter_by_page_size.pageSize, "Количество отображенных фильмов на странице не равно переданному в pageSize"
 
     @pytest.mark.smoke
     @allure.story("Получение афиш фильмов")
@@ -72,12 +73,12 @@ class TestMoviesApi:
         Тест на получение афиш фильмов с явным указанием фильтра "page".
         """
         with allure.step("Получение афиш фильмов"):
-            filter_by_page = {"page": random.randint(1, 10)}
+            filter_by_page = ParamsForGetMoviesRequest(page=random.randint(1, 10))
             response = api_manager.movies_api.get_movies(filter_by_page).json()
             response_data = GetMoviesResponse(**response)
 
         with allure.step("Проверки API ответа"):
-            assert response_data.page == filter_by_page["page"], "page не совпадает с переданным"
+            assert response_data.page == filter_by_page.page, "page не совпадает с переданным"
 
     @pytest.mark.smoke
     @allure.story("Получение афиш фильмов")
@@ -89,14 +90,14 @@ class TestMoviesApi:
         Тест на получение афиш фильмов с явным указанием фильтра "minPrice".
         """
         with allure.step("Получение афиш фильмов"):
-            filter_by_min_price = {"minPrice": random.randint(1, 500)}
+            filter_by_min_price = ParamsForGetMoviesRequest(minPrice=random.randint(1, 500))
             response = api_manager.movies_api.get_movies(filter_by_min_price).json()
             response_data = GetMoviesResponse(**response)
 
         with allure.step("Проверки API ответа"):
             with check:
                 for movie in response_data.movies:
-                    assert movie["price"] > filter_by_min_price["minPrice"], "price меньше, чем minPrice"
+                    assert movie["price"] >= filter_by_min_price.minPrice, "price меньше, чем minPrice"
 
     @pytest.mark.smoke
     @allure.story("Получение афиш фильмов")
@@ -108,14 +109,14 @@ class TestMoviesApi:
         Тест на получение афиш фильмов с явным указанием фильтра "maxPrice".
         """
         with allure.step("Получение афиш фильмов"):
-            filter_by_max_price = {"maxPrice": random.randint(1500, 5000)}
+            filter_by_max_price = ParamsForGetMoviesRequest(maxPrice=random.randint(1500, 5000))
             response = api_manager.movies_api.get_movies(filter_by_max_price).json()
             response_data = GetMoviesResponse(**response)
 
         with allure.step("Проверки API ответа"):
             with check:
                 for movie in response_data.movies:
-                    assert movie["price"] < filter_by_max_price["maxPrice"], "price больше, чем maxPrice"
+                    assert movie["price"] <= filter_by_max_price.maxPrice, "price больше, чем maxPrice"
 
     @pytest.mark.smoke
     @allure.story("Получение афиш фильмов")
@@ -127,8 +128,8 @@ class TestMoviesApi:
         Тест на получение афиш фильмов с явным указанием фильтра "locations".
         """
         with allure.step("Получение афиш фильмов"):
-            locations = [DataGeneratorForMoviesAPI.generate_random_location()]
-            filter_by_locations = {"locations": locations}
+            locations = DataGeneratorForMoviesAPI.generate_random_location()
+            filter_by_locations = ParamsForGetMoviesRequest(locations=locations)
             response = api_manager.movies_api.get_movies(filter_by_locations).json()
             response_data = GetMoviesResponse(**response)
 
@@ -148,7 +149,7 @@ class TestMoviesApi:
         """
         with allure.step("Получение афиш фильмов"):
             genre_id = DataGeneratorForMoviesAPI.generate_random_genre_id()
-            filter_by_genre_id = {"genreId": genre_id}
+            filter_by_genre_id = ParamsForGetMoviesRequest(genreId=genre_id)
             response = api_manager.movies_api.get_movies(filter_by_genre_id).json()
             response_data = GetMoviesResponse(**response)
 
@@ -163,19 +164,16 @@ class TestMoviesApi:
     @allure.title("Успешное получение афиш фильмов с комбинированными фильтрами")
     @allure.tag("regression", "api")
     @allure.severity(allure.severity_level.NORMAL)
-    def test_get_movies_with_multiple_filters(self, min_price: int | float, max_price: int | float, locations: str,
+    def test_get_movies_with_multiple_filters(self, min_price: int | float, max_price: int | float,
+                                              locations: str,
                                               genre_id: int,
                                               api_manager: ApiManager) -> None:
         """
         Параметризованный тест на получение афиш фильмов с комбинацией фильтров".
         """
         with allure.step("Подготовка фильтров"):
-            combined_filtered = {
-                "minPrice": min_price,
-                "maxPrice": max_price,
-                "locations": locations,
-                "genreId": genre_id,
-            }
+            combined_filtered = ParamsForGetMoviesRequest(minPrice=min_price, maxPrice=max_price, locations=locations,
+                                                          genreId=genre_id)
 
         with allure.step("Получение афиш фильмов"):
             response = api_manager.movies_api.get_movies(combined_filtered).json()

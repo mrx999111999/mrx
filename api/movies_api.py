@@ -1,9 +1,8 @@
 import requests
-from typing import Any
 from requests import Session
 from constants import BASE_URL_FOR_MOVIES_API, MOVIES_ENDPOINT
 from custom_requester.custom_requester import CustomRequester
-from models.models import CreateMovieRequest
+from models.models import CreateMovieRequest, ParamsForGetMoviesRequest
 
 
 class MoviesAPI(CustomRequester):
@@ -14,7 +13,7 @@ class MoviesAPI(CustomRequester):
     def __init__(self, session: Session) -> None:
         super().__init__(session=session, base_url=BASE_URL_FOR_MOVIES_API)
 
-    def get_movies(self, params: dict[str, Any] | None = None, expected_status: int = 200) -> requests.Response:
+    def get_movies(self, params: ParamsForGetMoviesRequest = None, expected_status: int = 200) -> requests.Response:
         """
         Получение афиш фильмов.
         :param params: Словарь параметров
@@ -27,7 +26,7 @@ class MoviesAPI(CustomRequester):
             params=params
         )
 
-    def create_movie(self, movie_data: dict[str, str | int | float | bool] | CreateMovieRequest,
+    def create_movie(self, movie_data: CreateMovieRequest,
                      expected_status: int = 201) -> requests.Response:
         """
         Создание фильма.

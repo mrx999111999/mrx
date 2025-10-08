@@ -6,6 +6,8 @@ from requests import Session
 from typing import Any
 from pydantic import BaseModel
 
+from models.models import ParamsForGetMoviesRequest
+
 
 class CustomRequester:
     """
@@ -28,8 +30,8 @@ class CustomRequester:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
 
-    def send_request(self, method: str, endpoint: str, params: dict[str, Any] | None = None,
-                     data: dict[str, Any] | BaseModel | None = None,
+    def send_request(self, method: str, endpoint: str, params: ParamsForGetMoviesRequest = None,
+                     data: dict[str, Any] | BaseModel = None,
                      expected_status: int = 200,
                      need_logging: bool = True) -> requests.Response:
         """

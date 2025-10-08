@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Literal
 from enums.roles import Roles
 import datetime
 import re
@@ -139,3 +139,14 @@ class CreateMovieResponse(BaseModel):
 
 class DeleteMovieResponse(CreateMovieResponse):
     reviews: list = Field(default_factory=list, description="Список отзывов")
+
+
+class ParamsForGetMoviesRequest(BaseModel):
+    pageSize: int = Field(default=None, gt=0, description="Размер страницы")
+    page: int = Field(default=None, gt=0, description="Текущая страница")
+    minPrice: int = Field(default=None, gt=0, description="Минимальная цена билета")
+    maxPrice: int = Field(default=None, gt=0, description="Максимальная цена билета")
+    locations: str = Field(default=None, min_length=1, description="Локация показа")
+    published: bool = Field(default=None, description="Опубликован ли фильм")
+    genreId: int = Field(default=None, gt=0, description="ID жанра")
+    createdAt: str = Field(default=None, description="Дата и время создания фильма в формате ISO 8601")

@@ -26,7 +26,7 @@ class UserAPI(CustomRequester):
             expected_status=expected_status
         )
 
-    def create_user(self, user_data: dict[str, Any] | UserRegisterRequest,
+    def create_user(self, user_data: UserRegisterRequest,
                     expected_status: int = 201) -> requests.Response:
         """
         Создание пользователя.
