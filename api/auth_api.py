@@ -1,3 +1,4 @@
+import allure
 import requests
 from requests import Session
 from constants import REGISTER_ENDPOINT
@@ -22,12 +23,13 @@ class AuthAPI(CustomRequester):
         :param user_data: Данные пользователя.
         :param expected_status: Ожидаемый статус-код.
         """
-        return self.send_request(
-            method="POST",
-            endpoint=REGISTER_ENDPOINT,
-            data=user_data,
-            expected_status=expected_status
-        )
+        with allure.step("Регистрация нового пользователя"):
+            return self.send_request(
+                method="POST",
+                endpoint=REGISTER_ENDPOINT,
+                data=user_data,
+                expected_status=expected_status
+            )
 
     def login_user(self, login_data: UserLoginRequest,
                    expected_status: int = 200) -> requests.Response:
@@ -36,23 +38,25 @@ class AuthAPI(CustomRequester):
         :param login_data: Данные для логина.
         :param expected_status: Ожидаемый статус-код.
         """
-        return self.send_request(
-            method="POST",
-            endpoint=LOGIN_ENDPOINT,
-            data=login_data,
-            expected_status=expected_status
-        )
+        with allure.step("Авторизация пользователя"):
+            return self.send_request(
+                method="POST",
+                endpoint=LOGIN_ENDPOINT,
+                data=login_data,
+                expected_status=expected_status
+            )
 
     def authenticate(self, user_creds: tuple[str, str]) -> None:
         """
         Авторизация пользователя и обновление хэдеров добавлением токена.
         :param user_creds: Данные для логина.
         """
-        email, password = user_creds
+        with allure.step("Авторизация пользователя и получение токена"):
+            email, password = user_creds
 
-        login_data = UserLoginRequest(email=email, password=password)
-        response = self.login_user(login_data).json()
-        if "accessToken" not in response:
-            raise KeyError("token is missing")
+            login_data = UserLoginRequest(email=email, password=password)
+            response = self.login_user(login_data).json()
+            if "accessToken" not in response:
+                raise KeyError("token is missing")
 
-        self.update_session_headers(**{"authorization": f"Bearer {response['accessToken']}"})
+            self.update_session_headers(**{"authorization": f"Bearer {response['accessToken']}"})

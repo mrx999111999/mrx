@@ -1,3 +1,4 @@
+import allure
 import requests
 from requests import Session
 from constants import BASE_URL_FOR_MOVIES_API, MOVIES_ENDPOINT
@@ -19,12 +20,13 @@ class MoviesAPI(CustomRequester):
         :param params: Словарь параметров
         :param expected_status: Ожидаемый статус-код.
         """
-        return self.send_request(
-            method="GET",
-            endpoint=MOVIES_ENDPOINT,
-            expected_status=expected_status,
-            params=params
-        )
+        with allure.step("Получение списка фильмов"):
+            return self.send_request(
+                method="GET",
+                endpoint=MOVIES_ENDPOINT,
+                expected_status=expected_status,
+                params=params
+            )
 
     def create_movie(self, movie_data: CreateMovieRequest,
                      expected_status: int = 201) -> requests.Response:
@@ -33,12 +35,13 @@ class MoviesAPI(CustomRequester):
         :param movie_data: Данные фильма
         :param expected_status: Ожидаемый статус-код.
         """
-        return self.send_request(
-            method="POST",
-            endpoint=MOVIES_ENDPOINT,
-            data=movie_data,
-            expected_status=expected_status
-        )
+        with allure.step("Создание нового фильма"):
+            return self.send_request(
+                method="POST",
+                endpoint=MOVIES_ENDPOINT,
+                data=movie_data,
+                expected_status=expected_status
+            )
 
     def delete_movie(self, movie_id: int, expected_status: int = 200) -> requests.Response:
         """
@@ -46,8 +49,9 @@ class MoviesAPI(CustomRequester):
         :param movie_id: Айди фильма
         :param expected_status: Ожидаемый статус-код.
         """
-        return self.send_request(
-            method="DELETE",
-            endpoint=f"{MOVIES_ENDPOINT}/{movie_id}",
-            expected_status=expected_status
-        )
+        with allure.step("Удаление фильма"):
+            return self.send_request(
+                method="DELETE",
+                endpoint=f"{MOVIES_ENDPOINT}/{movie_id}",
+                expected_status=expected_status
+            )

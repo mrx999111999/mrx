@@ -1,6 +1,8 @@
 import json
 import logging
 import os
+
+import allure
 import requests
 from requests import Session
 from typing import Any
@@ -44,23 +46,25 @@ class CustomRequester:
         :param need_logging: Флаг для логирования (по умолчанию True).
         :return: Объект ответа requests.Response.
         """
-        if isinstance(data, BaseModel):
-            data = data.model_dump(exclude_unset=True)
-        url = f"{self.base_url}{endpoint}"
-        response = self.session.request(method, url, params, json=data, headers=self.headers)
-        if need_logging:
-            self.log_request_and_response(response)
-        if response.status_code != expected_status:
-            raise ValueError(f"Unexpected status code: {response.status_code}. Expected: {expected_status}")
-        return response
+        with allure.step("Отправка HTTP запроса"):
+            if isinstance(data, BaseModel):
+                data = data.model_dump(exclude_unset=True)
+            url = f"{self.base_url}{endpoint}"
+            response = self.session.request(method, url, params, json=data, headers=self.headers)
+            if need_logging:
+                self.log_request_and_response(response)
+            if response.status_code != expected_status:
+                raise ValueError(f"Unexpected status code: {response.status_code}. Expected: {expected_status}")
+            return response
 
     def update_session_headers(self, **kwargs: str) -> None:
         """
         Обновление заголовков сессии.
         :param kwargs: Дополнительные заголовки.
         """
-        self.headers.update(kwargs)  # Обновляем базовые заголовки
-        self.session.headers.update(self.headers)  # Обновляем заголовки в текущей сессии
+        with allure.step("Обновление заголовков сессии"):
+            self.headers.update(kwargs)  # Обновляем базовые заголовки
+            self.session.headers.update(self.headers)  # Обновляем заголовки в текущей сессии
 
     def log_request_and_response(self, response: requests.Response) -> None:
         """
