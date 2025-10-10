@@ -14,20 +14,21 @@ class MoviesAPI(CustomRequester):
     def __init__(self, session: Session) -> None:
         super().__init__(session=session, base_url=BASE_URL_FOR_MOVIES_API)
 
+    @allure.step("Получение списка фильмов")
     def get_movies(self, params: ParamsForGetMoviesRequest = None, expected_status: int = 200) -> requests.Response:
         """
         Получение афиш фильмов.
         :param params: Словарь параметров
         :param expected_status: Ожидаемый статус-код.
         """
-        with allure.step("Получение списка фильмов"):
-            return self.send_request(
-                method="GET",
-                endpoint=MOVIES_ENDPOINT,
-                expected_status=expected_status,
-                params=params
-            )
+        return self.send_request(
+            method="GET",
+            endpoint=MOVIES_ENDPOINT,
+            expected_status=expected_status,
+            params=params
+        )
 
+    @allure.step("Создание нового фильма")
     def create_movie(self, movie_data: CreateMovieRequest,
                      expected_status: int = 201) -> requests.Response:
         """
@@ -35,23 +36,22 @@ class MoviesAPI(CustomRequester):
         :param movie_data: Данные фильма
         :param expected_status: Ожидаемый статус-код.
         """
-        with allure.step("Создание нового фильма"):
-            return self.send_request(
-                method="POST",
-                endpoint=MOVIES_ENDPOINT,
-                data=movie_data,
-                expected_status=expected_status
-            )
+        return self.send_request(
+            method="POST",
+            endpoint=MOVIES_ENDPOINT,
+            data=movie_data,
+            expected_status=expected_status
+        )
 
+    @allure.step("Удаление фильма")
     def delete_movie(self, movie_id: int, expected_status: int = 200) -> requests.Response:
         """
         Удаление фильма.
         :param movie_id: Айди фильма
         :param expected_status: Ожидаемый статус-код.
         """
-        with allure.step("Удаление фильма"):
-            return self.send_request(
-                method="DELETE",
-                endpoint=f"{MOVIES_ENDPOINT}/{movie_id}",
-                expected_status=expected_status
-            )
+        return self.send_request(
+            method="DELETE",
+            endpoint=f"{MOVIES_ENDPOINT}/{movie_id}",
+            expected_status=expected_status
+        )

@@ -15,19 +15,20 @@ class UserAPI(CustomRequester):
     def __init__(self, session: Session) -> None:
         super().__init__(session=session, base_url=BASE_URL_FOR_AUTH_API)
 
+    @allure.step("Получение информации о пользователе")
     def get_user(self, user_locator: str, expected_status: int = 200) -> requests.Response:
         """
         Получение информации о пользователе.
         :param user_locator: ID или Email пользователя
         :param expected_status: Ожидаемый статус-код.
         """
-        with allure.step("Получение информации о пользователе"):
-            return self.send_request(
-                method="GET",
-                endpoint=f"{USER_ENDPOINT}/{user_locator}",
-                expected_status=expected_status
-            )
+        return self.send_request(
+            method="GET",
+            endpoint=f"{USER_ENDPOINT}/{user_locator}",
+            expected_status=expected_status
+        )
 
+    @allure.step("Создание нового пользователя")
     def create_user(self, user_data: UserRegisterRequest,
                     expected_status: int = 201) -> requests.Response:
         """
@@ -35,38 +36,37 @@ class UserAPI(CustomRequester):
         :param user_data: Данные для создания пользователя
         :param expected_status: Ожидаемый статус-код.
         """
-        with allure.step("Создание нового пользователя"):
-            return self.send_request(
-                method="POST",
-                endpoint=USER_ENDPOINT,
-                data=user_data,
-                expected_status=expected_status
-            )
+        return self.send_request(
+            method="POST",
+            endpoint=USER_ENDPOINT,
+            data=user_data,
+            expected_status=expected_status
+        )
 
+    @allure.step("Удаление пользователя")
     def delete_user(self, user_id: str, expected_status: int = 200) -> requests.Response:
         """
         Удаление пользователя.
         :param user_id: ID пользователя.
         :param expected_status: Ожидаемый статус-код.
         """
-        with allure.step("Удаление пользователя"):
-            return self.send_request(
-                method="DELETE",
-                endpoint=f"{USER_ENDPOINT}/{user_id}",
-                expected_status=expected_status
-            )
+        return self.send_request(
+            method="DELETE",
+            endpoint=f"{USER_ENDPOINT}/{user_id}",
+            expected_status=expected_status
+        )
 
+    @allure.step("Обновление данных пользователя")
     def update_user(self, user_id: str, user_data: dict[str, Any], expected_status: int = 200) -> requests.Response:
         """
         Изменение данных пользователя.
-        :param user_data: Данные, которые нужно изменить у пользователя
         :param user_id: ID пользователя.
+        :param user_data: Данные, которые нужно изменить у пользователя
         :param expected_status: Ожидаемый статус-код.
         """
-        with allure.step("Обновление данных пользователя"):
-            return self.send_request(
-                method="PATCH",
-                endpoint=f"{USER_ENDPOINT}/{user_id}",
-                data=user_data,
-                expected_status=expected_status
-            )
+        return self.send_request(
+            method="PATCH",
+            endpoint=f"{USER_ENDPOINT}/{user_id}",
+            data=user_data,
+            expected_status=expected_status
+        )

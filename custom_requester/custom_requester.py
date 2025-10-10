@@ -46,25 +46,32 @@ class CustomRequester:
         :param need_logging: Флаг для логирования (по умолчанию True).
         :return: Объект ответа requests.Response.
         """
-        with allure.step("Отправка HTTP запроса"):
+        with allure.step(f"Подготовка данных для {method} запроса на {endpoint}"):
             if isinstance(data, BaseModel):
                 data = data.model_dump(exclude_unset=True)
             url = f"{self.base_url}{endpoint}"
+
+        with allure.step(f"Выполнение {method} запроса на {endpoint}"):
             response = self.session.request(method, url, params, json=data, headers=self.headers)
+
+        with allure.step("Логирование запроса и ответа" if need_logging else "Пропуск логирования"):
             if need_logging:
                 self.log_request_and_response(response)
+
+        with allure.step(f"Проверка статус-кода (ожидается: {expected_status})"):
             if response.status_code != expected_status:
                 raise ValueError(f"Unexpected status code: {response.status_code}. Expected: {expected_status}")
-            return response
 
+        return response
+
+    @allure.step("Обновление заголовков сессии")
     def update_session_headers(self, **kwargs: str) -> None:
         """
         Обновление заголовков сессии.
         :param kwargs: Дополнительные заголовки.
         """
-        with allure.step("Обновление заголовков сессии"):
-            self.headers.update(kwargs)  # Обновляем базовые заголовки
-            self.session.headers.update(self.headers)  # Обновляем заголовки в текущей сессии
+        self.headers.update(kwargs)  # Обновляем базовые заголовки
+        self.session.headers.update(self.headers)  # Обновляем заголовки в текущей сессии
 
     def log_request_and_response(self, response: requests.Response) -> None:
         """
