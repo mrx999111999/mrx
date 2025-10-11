@@ -2,6 +2,14 @@ import json
 import logging
 import os
 
+import allure
+import requests
+from requests import Session
+from typing import Any
+from pydantic import BaseModel
+
+from models.models import ParamsForGetMoviesRequest
+
 
 class CustomRequester:
     """
@@ -12,7 +20,7 @@ class CustomRequester:
         "Accept": "application/json"
     }
 
-    def __init__(self, session, base_url):
+    def __init__(self, session: Session, base_url: str) -> None:
         """
         Инициализация кастомного реквестера.
         :param session: Объект requests.Session.
@@ -24,7 +32,10 @@ class CustomRequester:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
 
-    def send_request(self, method, endpoint, params=None, data=None, expected_status=200, need_logging=True):
+    def send_request(self, method: str, endpoint: str, params: ParamsForGetMoviesRequest = None,
+                     data: dict[str, Any] | BaseModel = None,
+                     expected_status: int = 200,
+                     need_logging: bool = True) -> requests.Response:
         """
         Универсальный метод для отправки запросов.
         :param params: Словарь параметров
@@ -35,15 +46,26 @@ class CustomRequester:
         :param need_logging: Флаг для логирования (по умолчанию True).
         :return: Объект ответа requests.Response.
         """
-        url = f"{self.base_url}{endpoint}"
-        response = self.session.request(method, url, params, json=data, headers=self.headers)
-        if need_logging:
-            self.log_request_and_response(response)
-        if response.status_code != expected_status:
-            raise ValueError(f"Unexpected status code: {response.status_code}. Expected: {expected_status}")
+        with allure.step(f"Подготовка данных для {method} запроса на {endpoint}"):
+            if isinstance(data, BaseModel):
+                data = data.model_dump(exclude_unset=True)
+            url = f"{self.base_url}{endpoint}"
+
+        with allure.step(f"Выполнение {method} запроса на {endpoint}"):
+            response = self.session.request(method, url, params, json=data, headers=self.headers)
+
+        with allure.step("Логирование запроса и ответа" if need_logging else "Пропуск логирования"):
+            if need_logging:
+                self.log_request_and_response(response)
+
+        with allure.step(f"Проверка статус-кода (ожидается: {expected_status})"):
+            if response.status_code != expected_status:
+                raise ValueError(f"Unexpected status code: {response.status_code}. Expected: {expected_status}")
+
         return response
 
-    def update_session_headers(self, **kwargs):
+    @allure.step("Обновление заголовков сессии")
+    def update_session_headers(self, **kwargs: str) -> None:
         """
         Обновление заголовков сессии.
         :param kwargs: Дополнительные заголовки.
@@ -51,7 +73,7 @@ class CustomRequester:
         self.headers.update(kwargs)  # Обновляем базовые заголовки
         self.session.headers.update(self.headers)  # Обновляем заголовки в текущей сессии
 
-    def log_request_and_response(self, response):
+    def log_request_and_response(self, response: requests.Response) -> None:
         """
         Логирование запросов и ответов.
         :param response: Объект ответа requests.Response.
@@ -68,6 +90,8 @@ class CustomRequester:
             if hasattr(request, 'body') and request.body is not None:
                 if isinstance(request.body, bytes):
                     body = request.body.decode('utf-8')
+                elif isinstance(request.body, str):
+                    body = request.body
                 body = f"-d '{body}' \n" if body != '{}' else ''
 
             # Логируем запрос
@@ -83,6 +107,10 @@ class CustomRequester:
             response_status = response.status_code
             is_success = response.ok
             response_data = response.text
+            if not is_success:
+                self.logger.info(f"\tRESPONSE:"
+                                 f"\nSTATUS_CODE: {RED}{response_status}{RESET}"
+                                 f"\nDATA: {RED}{response_data}{RESET}")
 
             # Попытка форматировать JSON
             try:

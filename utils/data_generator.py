@@ -1,5 +1,8 @@
+import datetime
 import random
 import string
+from typing import Any
+from uuid import uuid4
 from faker import Faker
 
 faker = Faker()
@@ -8,16 +11,16 @@ faker = Faker()
 class DataGeneratorForAuthAPI:
 
     @staticmethod
-    def generate_random_email():
+    def generate_random_email() -> str:
         random_string = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
         return f"kek{random_string}@gmail.com"
 
     @staticmethod
-    def generate_random_full_name():
+    def generate_random_full_name() -> str:
         return f"{faker.first_name()} {faker.last_name()}"
 
     @staticmethod
-    def generate_random_password():
+    def generate_random_password() -> str:
         """
         Генерация пароля, соответствующего требованиям:
         - Минимум 1 буква.
@@ -41,33 +44,48 @@ class DataGeneratorForAuthAPI:
 
         return ''.join(password)
 
+    @staticmethod
+    def generate_user_data() -> dict[str, Any]:
+        """Генерирует данные для тестового пользователя"""
+        return {
+            'id': str(uuid4()),  # генерируем UUID как строку
+            'email': DataGeneratorForAuthAPI.generate_random_email(),
+            'full_name': DataGeneratorForAuthAPI.generate_random_full_name(),
+            'password': DataGeneratorForAuthAPI.generate_random_password(),
+            'created_at': datetime.datetime.now(),
+            'updated_at': datetime.datetime.now(),
+            'verified': False,
+            'banned': False,
+            'roles': '{USER}'
+        }
+
 
 class DataGeneratorForMoviesAPI:
 
     @staticmethod
-    def generate_random_name():
-        return f"{faker.catch_phrase()}"
+    def generate_random_name() -> str:
+        return faker.catch_phrase()
 
     @staticmethod
-    def generate_random_image_url():
-        return f"{faker.image_url()}"
+    def generate_random_image_url() -> str:
+        return faker.image_url()
 
     @staticmethod
-    def generate_random_price():
+    def generate_random_price() -> int:
         return random.randint(100, 2000)
 
     @staticmethod
-    def generate_random_description():
-        return f"{faker.text(max_nb_chars=200)}"
+    def generate_random_description() -> str:
+        return faker.text(max_nb_chars=200)
 
     @staticmethod
-    def generate_random_location():
+    def generate_random_location() -> str:
         return random.choice(["SPB", "MSK"])
 
     @staticmethod
-    def generate_random_published():
+    def generate_random_published() -> bool:
         return random.choice([True, False])
 
     @staticmethod
-    def generate_random_genre_id():
+    def generate_random_genre_id() -> int:
         return random.randint(1, 10)
