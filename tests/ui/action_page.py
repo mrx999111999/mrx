@@ -1,3 +1,5 @@
+from typing import Literal
+
 import allure
 from playwright.sync_api import Page
 
@@ -28,7 +30,7 @@ class PageAction:
         return self.page.locator(locator).text_content()
 
     @allure.step("Ожидание появления или исчезновения элемента: {locator}, state = {state}")
-    def wait_for_element(self, locator: str, state: str = "visible") -> None:
+    def wait_for_element(self, locator: str, state: Literal["attached", "detached", "hidden", "visible"] = "visible") -> None:
         self.page.locator(locator).wait_for(state=state)
 
     @allure.step("Скриншот текущей страницы")

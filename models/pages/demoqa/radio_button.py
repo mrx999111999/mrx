@@ -4,7 +4,7 @@ from tests.ui.demoqa.base_page import BasePage
 
 
 class DemoQARadioButtonPage(BasePage):
-    def __init__(self, page: Page):
+    def __init__(self, page: Page) -> None:
         super().__init__(page)
         self.url = f"{self.home_url}radio-button"
 

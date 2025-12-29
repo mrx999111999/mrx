@@ -33,4 +33,4 @@ class TestLoginPage:
         # login_page.make_screenshot_and_attach_to_allure()
 
         # Проверяем всплывающее уведомление
-        login_page.assert_allert_was_pop_up()
+        login_page.assert_alert_was_pop_up()
