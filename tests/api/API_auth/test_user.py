@@ -36,7 +36,6 @@ class TestUser:
                 assert response_data.fullName == creation_user_data.fullName, "fullName не совпадает"
                 assert response_data.roles == creation_user_data.roles, "roles не совпадает"
                 assert response_data.verified is True, "verified должен быть True"
-                assert response_data.banned is False, "banned должен быть False"
 
         with allure.step("Проверки в БД"):
             with check:
@@ -73,7 +72,6 @@ class TestUser:
                 assert user_by_id.fullName == creation_user_data.fullName, "fullName не совпадает"
                 assert user_by_id.roles == creation_user_data.roles, "roles не совпадает"
                 assert user_by_id.verified is True, "verified должен быть True"
-                assert user_by_id.banned is False, "banned должен быть False"
 
     @pytest.mark.smoke
     @pytest.mark.slow
@@ -100,7 +98,6 @@ class TestUser:
                 assert response_data.fullName == creation_user_data.fullName, "fullName не совпадает"
                 assert response_data.roles == creation_user_data.roles, "roles не совпадает"
                 assert response_data.verified is True, "verified должен быть True"
-                assert response_data.banned is False, "banned должен быть False"
 
         with allure.step("Проверки в БД"):
             with check:

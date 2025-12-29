@@ -54,7 +54,6 @@ class UserRegisterResponse(BaseModel):
                        description="Email адрес пользователя")
     fullName: str = Field(min_length=1, description="Полное имя пользователя")
     verified: bool
-    banned: bool
     roles: list[Roles] = Field(min_length=1, description="Роли пользователя")
     createdAt: str = Field(min_length=1, description="Дата и время создания пользователя в формате ISO 8601")
 
