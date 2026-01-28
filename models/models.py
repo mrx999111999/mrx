@@ -76,7 +76,7 @@ class UserLoginRequest(BaseModel):
 class UserLoginResponse(BaseModel):
     user: Dict[str, Any] = Field(min_length=1, description="Данные пользователя")
     accessToken: str = Field(min_length=1, description="Access токен")
-    refreshToken: str = Field(min_length=1, description="Refresh токен")
+    #refreshToken: str = Field(min_length=1, description="Refresh токен")
     expiresIn: int = Field(gt=0, description="Время истечения токена в Unix timestamp")
 
 

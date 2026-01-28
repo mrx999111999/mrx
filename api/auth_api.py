@@ -33,7 +33,7 @@ class AuthAPI(CustomRequester):
 
     @allure.step("Авторизация пользователя")
     def login_user(self, login_data: UserLoginRequest,
-                   expected_status: int = 201) -> requests.Response:
+                   expected_status: int = 200) -> requests.Response:
         """
         Авторизация пользователя.
         :param login_data: Данные для логина.
